@@ -6,8 +6,51 @@ trigger:
 pool:
   name: 'azure2agent'
 
+variables:
+  # Container registry service connection established during pipeline creation
+  dockerRegistryServiceConnection: 'acd1e09d-dc2d-498c-bfa8-c5943965a2e0'
+  imageRepository: 'lathadevopsexamplevotingapp'
+  containerRegistry: 'azure2registry.azurecr.io'
+  dockerfilePath: '$(Build.SourcesDirectory)/result/Dockerfile'
+  tag: '$(Build.BuildId)'
+
 
 stages:
+- stage: Build
+  displayName: Build 
+  jobs:
+  - job: Build
+    displayName: Build
+   
+    steps:
+    - task: Docker@2
+      displayName: Build and push an image to container registry
+      inputs:
+        containerRegistry: '$(dockerRegistryServiceConnection)'
+        repository: '$(imageRepository)'
+        command: 'buildAndPush'
+        Dockerfile: 'vote/Dockerfile'
+        tags: '$(tag)'
+
+
+- stage: Push
+  displayName: Push 
+  jobs:
+  - job: Push
+    displayName: Push
+   
+    steps:
+    - task: Docker@2
+      displayName: Build and push an image to container registry
+      inputs:
+        containerRegistry: '$(dockerRegistryServiceConnection)'
+        repository: '$(imageRepository)'
+        command: 'push'
+        tags: '$(tag)'
+
+
+
+
 - stage: Dev
   displayName: Deploy to dev
   jobs:
